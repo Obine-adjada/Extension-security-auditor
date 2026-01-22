@@ -1,6 +1,6 @@
 {
   "api": {
-    "url": "http://172.20.10.8:5000/api/extensions",
+    "url": "http://IP:5000/api/extensions",
     "enabled": true,
     "timeout": 10,
     "retry_attempts": 3

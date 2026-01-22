@@ -8,7 +8,7 @@ try:
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
-    print("Module 'requests' non disponible. Mode local uniquement.")
+    print("Module 'requests' non disponible Mode local uniquement")
 sys.path.insert(0, str(Path(__file__).parent / 'collectors'))
 from chrome_collector import ChromeCollector
 from firefox_collector import FirefoxCollector
@@ -20,11 +20,11 @@ try:
     CODE_SCANNER_AVAILABLE = True
 except ImportError:
     CODE_SCANNER_AVAILABLE = False
-    print("Avertissement: Code scanner non disponible")
+    print("Avertissement Code scanner non disponible")
 
 class ExtensionAgent:
     """
-    Agent principal qui orchestre la collecte multi-navigateurs.
+    Agent principal qui orchestre la collecte multi-navigateurs
     """
     def __init__(self, config_path=None):
         self.all_extensions = []
@@ -48,7 +48,7 @@ class ExtensionAgent:
                 return json.load(f)
         except FileNotFoundError:
             print(f"Attention: Fichier de config non trouvé: {config_path}")
-            print("Utilisation de la configuration par défaut (mode local uniquement)")
+            print("Utilisation de la configuration par défaut (mode local)")
             return {
                 "api": {"enabled": False},
                 "scan": {
@@ -63,7 +63,7 @@ class ExtensionAgent:
     
     def run_collectors(self):
         """
-        Exécute tous les collectors et agrège les résultats.
+        Exécute tous les collectors et agrège les résultats
         """
         print("Browser Extension Security Auditor")
         scan_time = datetime.now(timezone.utc).isoformat()
@@ -72,7 +72,7 @@ class ExtensionAgent:
         browsers = self.config.get('scan', {}).get('browsers', ['chrome', 'firefox', 'edge'])
         
         if 'chrome' in browsers:
-            print("[1/3] Scan Chrome...")
+            print("[1/3] Scan Chrome ")
             chrome_collector = ChromeCollector()
             chrome_exts = chrome_collector.collect_extensions()
             self.all_extensions.extend(chrome_exts)
@@ -80,7 +80,7 @@ class ExtensionAgent:
             print(f"Chrome: {len(chrome_exts)} extension(s)\n")
         
         if 'firefox' in browsers:
-            print("[2/3] Scan Firefox...")
+            print("[2/3] Scan Firefox ")
             firefox_collector = FirefoxCollector()
             firefox_exts = firefox_collector.collect_extensions()
             self.all_extensions.extend(firefox_exts)
@@ -88,7 +88,7 @@ class ExtensionAgent:
             print(f"Firefox: {len(firefox_exts)} extension(s)\n")
         
         if 'edge' in browsers:
-            print("[3/3] Scan Edge...")
+            print("[3/3] Scan Edge ")
             edge_collector = EdgeCollector()
             edge_exts = edge_collector.collect_extensions()
             self.all_extensions.extend(edge_exts)
@@ -99,7 +99,7 @@ class ExtensionAgent:
     
     def analyze_permissions(self):
         """
-        Analyse rapide des permissions trouvées.
+        Analyse rapide des permissions trouvées
         """
         dangerous_perms = [
             'cookies', 'webRequest', '<all_urls>', 
@@ -122,7 +122,7 @@ class ExtensionAgent:
     
     def scan_extensions_code(self):
         """
-        Scan le code JavaScript de chaque extension collectée.
+        Scan le code JavaScript de chaque extension collectée
         """
         if not CODE_SCANNER_AVAILABLE:
             print("\nCode scanner non disponible - installation requise:")
@@ -149,15 +149,14 @@ class ExtensionAgent:
                 # Ajoute les résultats au dictionnaire de l'extension
                 ext['code_scan'] = scan_results
                 
-                # Résumé
                 findings = scan_results['total_findings']
                 critical = scan_results['severity_counts']['critical']
                 high = scan_results['severity_counts']['high']
                 obfusc = scan_results['obfuscation_score']
                 
-                print(f"    Fichiers: {scan_results['files_scanned']}")
-                print(f"    Findings: {findings} (Critique: {critical}, Élevé: {high})")
-                print(f"    Obfuscation: {obfusc}/100")
+                print(f" Fichiers: {scan_results['files_scanned']}")
+                print(f"Findings: {findings} (Critique: {critical}, Élevé: {high})")
+                print(f" Obfuscation: {obfusc}/100")
                 
                 if scan_results['risk_indicators']:
                     print(f"    Risques:")
@@ -174,7 +173,7 @@ class ExtensionAgent:
 
     def print_summary(self):
         """
-        Affiche un résumé de la collecte.
+        Affiche un résumé de la collecte
         """
         print("RÉSUMÉ DE LA COLLECTE")
         print(f"Chrome:   {self.stats['chrome']} extension(s)")
@@ -192,7 +191,7 @@ class ExtensionAgent:
     
     def export_results(self):
         """
-        Exporte l'inventaire complet au format JSON.
+        Exporte l'inventaire complet au format JSON
         """
         scan_config = self.config.get('scan', {})
         
@@ -215,7 +214,7 @@ class ExtensionAgent:
     
     def send_to_api(self):
         """
-        Envoie l'inventaire à l'API backend si configuré.
+        Envoie l'inventaire à l'API backend si configuré
         """
         api_config = self.config.get('api', {})
         
