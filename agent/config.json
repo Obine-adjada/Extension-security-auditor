@@ -1,0 +1,13 @@
+{
+  "api": {
+    "url": "http://172.20.10.8:5000/api/extensions",
+    "enabled": true,
+    "timeout": 10,
+    "retry_attempts": 3
+  },
+  "scan": {
+    "browsers": ["chrome", "firefox", "edge"],
+    "export_local": true,
+    "export_path": "extensions_inventory.json"
+  }
+}
