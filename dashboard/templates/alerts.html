@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Alertes - Extension Security Auditor{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Alertes de Sécurité</h1>
+        <div>
+            <select class="form-select d-inline-block w-auto" id="severity-filter" onchange="applyFilter()">
+                <option value="">Toutes les sévérités</option>
+                <option value="critical">Critique</option>
+                <option value="high">Élevé</option>
+                <option value="medium">Moyen</option>
+                <option value="low">Faible</option>
+            </select>
+            <button class="btn btn-primary ms-2" onclick="loadAlerts()">
+                <i class="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div id="alerts-container">
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allAlerts = [];
+    
+    async function loadAlerts() {
+        try {
+            const response = await fetch('/api/dashboard/alerts');
+            allAlerts = await response.json();
+            applyFilter();
+        } catch (error) {
+            console.error('Erreur chargement alertes:', error);
+        }
+    }
+    
+    function applyFilter() {
+        const severityFilter = document.getElementById('severity-filter').value;
+        
+        let filtered = allAlerts;
+        if (severityFilter) {
+            filtered = allAlerts.filter(a => a.severity === severityFilter);
+        }
+        renderAlerts(filtered);
+    }
+    
+    function renderAlerts(alerts) {
+        const container = document.getElementById('alerts-container');
+        
+        if (alerts.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center py-5">Aucune alerte active</p>';
+            return;
+        }
+        let html = '';
+        alerts.forEach(alert => {
+            const severityConfig = {
+                'critical': { color: 'danger', icon: 'exclamation-octagon-fill' },
+                'high': { color: 'warning', icon: 'exclamation-triangle-fill' },
+                'medium': { color: 'info', icon: 'info-circle-fill' },
+                'low': { color: 'secondary', icon: 'info-circle' }
+            }[alert.severity] || { color: 'secondary', icon: 'info-circle' };
+            
+            html += `
+                <div class="alert alert-${severityConfig.color} d-flex align-items-start mb-3" role="alert">
+                    <i class="bi bi-${severityConfig.icon} me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading mb-2">
+                            ${escapeHtml(alert.extension_name)}
+                            <span class="badge bg-${severityConfig.color} ms-2">${alert.severity}</span>
+                            <span class="badge bg-secondary ms-2">${alert.browser}</span>
+                        </h5>
+                        <p class="mb-2">${escapeHtml(alert.message)}</p>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> 
+                            ${new Date(alert.created_at).toLocaleString('fr-FR')}
+                        </small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    loadAlerts();
+</script>
+{% endblock %}

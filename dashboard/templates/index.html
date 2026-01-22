@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Extension Security Auditor{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Dashboard de Sécurité</h1>
+    
+    <div class="row g-4 mb-4" id="stats-cards">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Total Extensions</div>
+                <div class="stat-value text-primary" id="total-extensions">-</div>
+                <small class="text-muted">Actives sur le réseau</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Risque Critique</div>
+                <div class="stat-value text-danger" id="high-risk">-</div>
+                <small class="text-muted">Score >= 70</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Chrome</div>
+                <div class="stat-value text-info" id="chrome-count">-</div>
+                <small class="text-muted">Extensions Chrome</small>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Edge</div>
+                <div class="stat-value text-success" id="edge-count">-</div>
+                <small class="text-muted">Extensions Edge</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">Distribution des Risques</h5>
+                <div style="position: relative; height: 250px;">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">Permissions les Plus Utilisées</h5>
+                <div style="position: relative; height: 250px;">
+                    <canvas id="permissionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="stat-card">
+                <h5 class="mb-3">Alertes Récentes</h5>
+                <div id="recent-alerts">
+                    <div class="text-center text-muted py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let riskChart, permissionsChart;
+    
+    async function loadDashboardData() {
+        try {
+            const response = await fetch('/api/dashboard/stats');
+            const data = await response.json();
+            
+            document.getElementById('total-extensions').textContent = data.total_extensions || 0;
+            document.getElementById('high-risk').textContent = data.high_risk_count || 0;
+            document.getElementById('chrome-count').textContent = data.by_browser?.chrome || 0;
+            document.getElementById('edge-count').textContent = data.by_browser?.edge || 0;
+            
+            updateRiskChart(data.risk_distribution || {});
+            updatePermissionsChart(data.top_permissions || []);
+            
+        } catch (error) {
+            console.error('Erreur chargement données:', error);
+        }
+    }
+    
+    async function loadRecentAlerts() {
+        try {
+            const response = await fetch('/api/dashboard/alerts');
+            const alerts = await response.json();
+            
+            const container = document.getElementById('recent-alerts');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center py-3">Aucune alerte active</p>';
+                return;
+            }
+            
+            let html = '<div class="list-group">';
+            alerts.slice(0, 5).forEach(alert => {
+                const severityClass = {
+                    'critical': 'danger',
+                    'high': 'warning',
+                    'medium': 'info',
+                    'low': 'secondary'
+                }[alert.severity] || 'secondary';
+                
+                html += `
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${alert.extension_name}</h6>
+                                <p class="mb-1 small">${alert.message}</p>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> ${new Date(alert.created_at).toLocaleString('fr-FR')}
+                                </small>
+                            </div>
+                            <span class="badge bg-${severityClass}">${alert.severity}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('Erreur chargement alertes:', error);
+        }
+    }
+    
+    function updateRiskChart(distribution) {
+        const ctx = document.getElementById('riskChart').getContext('2d');
+        
+        if (riskChart) {
+            riskChart.destroy();
+        }
+        
+        riskChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critique', 'Élevé', 'Moyen', 'Faible'],
+                datasets: [{
+                    data: [
+                        distribution.critical || 0,
+                        distribution.high || 0,
+                        distribution.medium || 0,
+                        distribution.low || 0
+                    ],
+                    backgroundColor: [
+                        '#dc3545',
+                        '#fd7e14',
+                        '#ffc107',
+                        '#28a745'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    function updatePermissionsChart(permissions) {
+        const ctx = document.getElementById('permissionsChart').getContext('2d');
+        
+        if (permissionsChart) {
+            permissionsChart.destroy();
+        }
+        
+        permissionsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: permissions.map(p => p.permission),
+                datasets: [{
+                    label: 'Extensions',
+                    data: permissions.map(p => p.count),
+                    backgroundColor: '#667eea'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    loadDashboardData();
+    loadRecentAlerts();
+    
+    setInterval(loadDashboardData, 30000);
+    setInterval(loadRecentAlerts, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Remediation - Extension Security Auditor{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4"><i class="bi bi-shield-shaded"></i> Remediation & Enforcement</h1>
+    
+    <div class="stat-card mb-4">
+        <h5 class="mb-3">Rapport Global</h5>
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h3 mb-0 text-danger" id="critical-count">-</div>
+                    <small class="text-muted">Critiques</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h3 mb-0 text-warning" id="high-count">-</div>
+                    <small class="text-muted">Élevés</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h3 mb-0 text-info" id="medium-count">-</div>
+                    <small class="text-muted">Moyens</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="h3 mb-0 text-success" id="low-count">-</div>
+                    <small class="text-muted">Faibles</small>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="generateReport()">
+            <i class="bi bi-file-earmark-text"></i> Générer le Rapport
+        </button>
+    </div>
+    
+    <div class="stat-card">
+        <h5 class="mb-3">Extensions Nécessitant une Action</h5>
+        <div id="extensions-list">
+            <div class="text-center py-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stat-card mt-4">
+        <h5 class="mb-3">Extensions en Quarantaine</h5>
+        <div id="quarantine-list">
+            <p class="text-muted">Aucune extension en quarantaine</p>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirm-action">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentExtensionId = null;
+    let currentAction = null;
+    
+    async function loadExtensionsForRemediation() {
+        try {
+            const response = await fetch('/api/dashboard/extensions');
+            const extensions = await response.json();
+            
+            displayExtensions(extensions);
+            
+        } catch (error) {
+            console.error('Erreur chargement:', error);
+        }
+    }
+    
+    async function displayExtensions(extensions) {
+        const container = document.getElementById('extensions-list');
+        
+        if (extensions.length === 0) {
+            container.innerHTML = '<p class="text-muted">Aucune extension</p>';
+            return;
+        }
+        
+        let criticalCount = 0;
+        let highCount = 0;
+        let mediumCount = 0;
+        let lowCount = 0;
+        
+        let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr>';
+        html += '<th>Extension</th><th>Risque</th><th>Actions Recommandées</th><th>Actions</th>';
+        html += '</tr></thead><tbody>';
+        
+        for (const ext of extensions) {
+            const score = ext.risk_score || 0;
+            let severity = 'low';
+            let badgeClass = 'success';
+            
+            if (score >= 90) {
+                severity = 'critical';
+                badgeClass = 'danger';
+                criticalCount++;
+            } else if (score >= 85) {
+                severity = 'high';
+                badgeClass = 'warning';
+                highCount++;
+            } else if (score >= 50) {
+                severity = 'medium';
+                badgeClass = 'info';
+                mediumCount++;
+            } else {
+                lowCount++;
+            }
+            
+            let actions = '';
+            if (score >= 90) {
+                actions = '<span class="badge bg-danger me-1">Désactiver</span><span class="badge bg-secondary">Quarantaine</span>';
+            } else if (score >= 85) {
+                actions = '<span class="badge bg-warning">Quarantaine</span>';
+            } else if (score >= 50) {
+                actions = '<span class="badge bg-info">Review</span>';
+            } else {
+                actions = '<span class="text-muted">Aucune</span>';
+            }
+            
+            html += `
+                <tr>
+                    <td><strong>${escapeHtml(ext.name)}</strong><br><small class="text-muted">${ext.browser}</small></td>
+                    <td><span class="badge bg-${badgeClass}">${score}</span></td>
+                    <td>${actions}</td>
+                    <td>
+                        ${score >= 50 ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="applyAction(${ext.id}, 'disable')">
+                                <i class="bi bi-x-circle"></i> Désactiver
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="applyAction(${ext.id}, 'quarantine')">
+                                <i class="bi bi-archive"></i> Quarantaine
+                            </button>
+                        ` : '<span class="text-muted">-</span>'}
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+        
+        document.getElementById('critical-count').textContent = criticalCount;
+        document.getElementById('high-count').textContent = highCount;
+        document.getElementById('medium-count').textContent = mediumCount;
+        document.getElementById('low-count').textContent = lowCount;
+    }
+    
+    function applyAction(extensionId, action) {
+        currentExtensionId = extensionId;
+        currentAction = action;
+        
+        const actionText = action === 'disable' ? 'désactiver' : 'mettre en quarantaine';
+        document.getElementById('modal-body').innerHTML = `
+            <p>Êtes-vous sûr de vouloir <strong>${actionText}</strong> cette extension ?</p>
+            <p class="text-muted small">Cette action sera effectuée en mode DRY-RUN (simulation).</p>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+    
+    document.getElementById('confirm-action').addEventListener('click', async function() {
+        try {
+            const response = await fetch(`/api/dashboard/remediation/apply/${currentExtensionId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    dry_run: true,
+                    actions: [currentAction]
+                })
+            });
+            
+            const result = await response.json();
+            
+            alert(`Action "${currentAction}" appliquée (DRY-RUN):\n${JSON.stringify(result, null, 2)}`);
+            
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            
+        } catch (error) {
+            alert('Erreur: ' + error.message);
+        }
+    });
+    
+    async function generateReport() {
+        try {
+            const response = await fetch('/api/dashboard/remediation/report');
+            const report = await response.json();
+            
+            console.log('Rapport:', report);
+            alert(`Rapport généré:\n${report.summary.total_extensions_evaluated} extensions évaluées\nCritiques: ${report.summary.critical_severity}`);
+            
+        } catch (error) {
+            alert('Erreur génération rapport: ' + error.message);
+        }
+    }
+    
+    async function loadQuarantined() {
+        try {
+            const response = await fetch('/api/dashboard/remediation/quarantine/list');
+            const data = await response.json();
+            
+            const container = document.getElementById('quarantine-list');
+            
+            if (data.count === 0) {
+                container.innerHTML = '<p class="text-muted">Aucune extension en quarantaine</p>';
+                return;
+            }
+            
+            let html = '<div class="list-group">';
+            data.extensions.forEach(item => {
+                const meta = item.metadata;
+                html += `
+                    <div class="list-group-item">
+                        <h6>${escapeHtml(meta.name)}</h6>
+                        <p class="mb-1 small text-muted">Raison: ${escapeHtml(meta.reason)}</p>
+                        <small class="text-muted">Quarantaine: ${new Date(meta.quarantine_date).toLocaleString('fr-FR')}</small>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    loadExtensionsForRemediation();
+    loadQuarantined();
+</script>
+{% endblock %}

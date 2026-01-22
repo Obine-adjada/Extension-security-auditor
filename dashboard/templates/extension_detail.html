@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Détails Extension - Extension Security Auditor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .finding-item {
+        margin-bottom: 15px;
+        padding: 15px;
+        border-left: 4px solid #dee2e6;
+    }
+    
+    .finding-item.critical {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    
+    .finding-item.high {
+        border-left-color: #fd7e14;
+        background-color: #fff3cd;
+    }
+    
+    .finding-item.medium {
+        border-left-color: #0dcaf0;
+        background-color: #d1ecf1;
+    }
+    
+    .finding-item.low {
+        border-left-color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    
+    .finding-context {
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        margin-top: 10px;
+    }
+    
+    .stats-box {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .stats-box .number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        display: block;
+    }
+    
+    .stats-box .label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4">
+        <a href="/extensions" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+        <h1 id="extension-name">Chargement...</h1>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="stat-card mb-4">
+                <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations Générales</h5>
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="180">ID Extension</th>
+                        <td><code id="ext-id">-</code></td>
+                    </tr>
+                    <tr>
+                        <th>Navigateur</th>
+                        <td id="ext-browser">-</td>
+                    </tr>
+                    <tr>
+                        <th>Version</th>
+                        <td id="ext-version">-</td>
+                    </tr>
+                    <tr>
+                        <th>Manifest</th>
+                        <td id="ext-manifest">-</td>
+                    </tr>
+                    <tr>
+                        <th>Auteur</th>
+                        <td id="ext-author">-</td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td id="ext-description">-</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="stat-card mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-shield-lock"></i> Permissions 
+                    (<span id="perm-count">0</span>)
+                </h5>
+                <div id="permissions-list">
+                    <div class="text-center text-muted py-3">Chargement...</div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-code-slash"></i> Analyse du Code JavaScript
+                </h5>
+                <div id="code-scan">
+                    <div class="text-center py-4">
+                        <button class="btn btn-primary btn-lg" onclick="launchCodeScan()">
+                            <i class="bi bi-play-fill"></i> Lancer l'analyse
+                        </button>
+                        <p class="text-muted mt-2 mb-0 small">
+                            Analyse statique des fichiers JavaScript
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="stat-card mb-4">
+                <h5 class="mb-3"><i class="bi bi-speedometer"></i> Score de Risque</h5>
+                <div class="text-center">
+                    <div class="stat-value" id="risk-score-value">-</div>
+                    <div id="risk-level" class="mt-2 mb-3"></div>
+                    <div style="position: relative; height: 180px;">
+                        <canvas id="riskGauge"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-shield-check"></i> Threat Intelligence
+                </h5>
+                <div id="threat-intel">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <p class="text-muted mt-2 mb-0 small">Vérification...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <h5 class="mb-3"><i class="bi bi-exclamation-triangle"></i> Alertes</h5>
+                <div id="alerts-list">
+                    <p class="text-muted text-center py-3 mb-0 small">Aucune alerte</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const extensionId = {{ ext_id }};
+    
+    async function loadExtensionDetails() {
+        try {
+            const response = await fetch(`/api/extensions/${extensionId}`);
+            
+            if (!response.ok) {
+                throw new Error('Extension non trouvée');
+            }
+            
+            const ext = await response.json();
+            
+            document.getElementById('extension-name').textContent = ext.name;
+            document.getElementById('ext-id').textContent = ext.extension_id;
+            document.getElementById('ext-browser').innerHTML = getBrowserBadge(ext.browser);
+            document.getElementById('ext-version').innerHTML = `<span class="badge bg-secondary">${ext.version}</span>`;
+            document.getElementById('ext-manifest').textContent = `Manifest V${ext.manifest_version}`;
+            document.getElementById('ext-author').textContent = ext.author || 'Inconnu';
+            document.getElementById('ext-description').textContent = ext.description || 'Aucune description';
+            
+            displayRiskScore(ext.risk_score || 0);
+            displayPermissions(ext.permissions || []);
+            
+        } catch (error) {
+            console.error('Erreur:', error);
+            document.getElementById('extension-name').textContent = 'Erreur de chargement';
+            document.querySelector('.container-fluid').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Erreur:</strong> ${error.message}
+                </div>
+            `;
+        }
+    }
+    
+    function displayRiskScore(score) {
+        document.getElementById('risk-score-value').textContent = score;
+        
+        let level, color;
+        if (score >= 70) {
+            level = 'CRITIQUE';
+            color = 'danger';
+        } else if (score >= 50) {
+            level = 'ÉLEVÉ';
+            color = 'warning';
+        } else if (score >= 30) {
+            level = 'MOYEN';
+            color = 'info';
+        } else {
+            level = 'FAIBLE';
+            color = 'success';
+        }
+        
+        document.getElementById('risk-score-value').className = `stat-value text-${color}`;
+        document.getElementById('risk-level').innerHTML = 
+            `<span class="badge bg-${color} fs-6">${level}</span>`;
+        
+        drawRiskGauge(score);
+    }
+    
+    function drawRiskGauge(score) {
+        const ctx = document.getElementById('riskGauge').getContext('2d');
+        
+        const color = score >= 70 ? '#dc3545' : score >= 50 ? '#fd7e14' : score >= 30 ? '#ffc107' : '#28a745';
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [color, '#e9ecef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                }
+            }
+        });
+    }
+    
+    function displayPermissions(permissions) {
+        document.getElementById('perm-count').textContent = permissions.length;
+        
+        if (permissions.length === 0) {
+            document.getElementById('permissions-list').innerHTML = 
+                '<p class="text-muted text-center py-3 mb-0">Aucune permission</p>';
+            return;
+        }
+        
+        let html = '<div class="list-group">';
+        permissions.forEach(perm => {
+            const isDangerous = perm.is_dangerous;
+            const iconClass = isDangerous ? 'bi-exclamation-triangle-fill text-danger' : 'bi-check-circle text-success';
+            
+            html += `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi ${iconClass} me-2"></i>
+                            <code>${escapeHtml(perm.name)}</code>
+                        </div>
+                        ${isDangerous ? '<span class="badge bg-danger">Dangereuse</span>' : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        document.getElementById('permissions-list').innerHTML = html;
+    }
+    
+    async function loadThreatIntel() {
+        try {
+            const response = await fetch(`/api/dashboard/threat-intel/${extensionId}`);
+            const data = await response.json();
+            
+            displayThreatIntel(data);
+            
+        } catch (error) {
+            document.getElementById('threat-intel').innerHTML = 
+                '<p class="text-muted small mb-0">Non configuré</p>';
+        }
+    }
+    
+    function displayThreatIntel(data) {
+        let html = '';
+        
+        if (data.error || !data.virustotal_checked) {
+            html = '<p class="text-muted small mb-0">VirusTotal non configuré</p>';
+        } else if (!data.virustotal_known) {
+            html = `
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    <small><strong>Inconnu</strong><br>
+                    Extension non analysée par VirusTotal</small>
+                </div>
+            `;
+        } else {
+            const safe = !data.threat_detected;
+            const alertClass = safe ? 'success' : 'danger';
+            const icon = safe ? 'shield-check' : 'exclamation-triangle';
+            
+            html = `
+                <div class="alert alert-${alertClass} mb-2">
+                    <i class="bi bi-${icon}"></i>
+                    <strong>${safe ? 'Sûr' : 'Menace'}</strong>
+                </div>
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td class="small">Réputation</td>
+                        <td class="small text-end"><strong>${data.reputation_score}/100</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="small">Malveillant</td>
+                        <td class="small text-end"><span class="badge bg-danger">${data.malicious_count || 0}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="small">Suspect</td>
+                        <td class="small text-end"><span class="badge bg-warning">${data.suspicious_count || 0}</span></td>
+                    </tr>
+                </table>
+            `;
+        }
+        
+        document.getElementById('threat-intel').innerHTML = html;
+    }
+
+    async function launchCodeScan() {
+        const container = document.getElementById('code-scan');
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="text-muted mt-3 mb-0">Analyse en cours...</p>
+                <small class="text-muted">Cela peut prendre quelques secondes</small>
+            </div>
+        `;
+        
+        try {
+            const response = await fetch(`/api/dashboard/code-scan/${extensionId}`);
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors du scan');
+            }
+            
+            const data = await response.json();
+            displayCodeScan(data);
+            
+        } catch (error) {
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    ${escapeHtml(error.message)}
+                </div>
+            `;
+        }
+    }
+    
+    function displayCodeScan(data) {
+        if (data.error) {
+            document.getElementById('code-scan').innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> ${escapeHtml(data.error)}
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div class="row g-3 mb-4">';
+        
+        html += `
+            <div class="col-3">
+                <div class="stats-box">
+                    <span class="number">${data.files_scanned}</span>
+                    <span class="label">Fichiers</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stats-box">
+                    <span class="number">${data.total_findings}</span>
+                    <span class="label">Findings</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stats-box">
+                    <span class="number text-danger">${data.severity_counts.critical}</span>
+                    <span class="label">Critiques</span>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="stats-box">
+                    <span class="number">${data.obfuscation_score}</span>
+                    <span class="label">Obfusc</span>
+                </div>
+            </div>
+        `;
+        
+        html += '</div>';
+        
+        if (data.risk_indicators && data.risk_indicators.length > 0) {
+            html += '<div class="alert alert-warning"><strong>Risques:</strong><ul class="mb-0 mt-2 small">';
+            data.risk_indicators.forEach(ind => {
+                html += `<li>${escapeHtml(ind)}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        
+        if (data.findings && data.findings.length > 0) {
+            html += '<h6 class="mt-3 mb-3">Détections</h6>';
+            
+            const critical = data.findings.filter(f => f.severity === 'critical');
+            const high = data.findings.filter(f => f.severity === 'high');
+            const top = [...critical, ...high].slice(0, 5);
+            
+            top.forEach(f => {
+                html += `
+                    <div class="finding-item ${f.severity}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong>${escapeHtml(f.name)}</strong>
+                            <span class="badge bg-${f.severity === 'critical' ? 'danger' : 'warning'}">${f.severity}</span>
+                        </div>
+                        <p class="mb-2 small">${escapeHtml(f.reason)}</p>
+                        <div class="small text-muted">
+                            <i class="bi bi-file-code"></i> ${escapeHtml(f.file)}
+                            <i class="bi bi-hash ms-2"></i> L.${f.line}
+                        </div>
+                        ${f.context ? `<div class="finding-context"><code>${escapeHtml(f.context)}</code></div>` : ''}
+                    </div>
+                `;
+            });
+            
+            if (data.findings.length > 5) {
+                html += `<p class="text-muted small">+ ${data.findings.length - 5} autres détections</p>`;
+            }
+        } else {
+            html += '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Aucun pattern suspect</div>';
+        }
+        
+        html += `
+            <button class="btn btn-outline-primary btn-sm mt-3" onclick="launchCodeScan()">
+                <i class="bi bi-arrow-clockwise"></i> Re-scanner
+            </button>
+        `;
+        
+        document.getElementById('code-scan').innerHTML = html;
+    }
+    
+    function getBrowserBadge(browser) {
+        const badges = {
+            'chrome': '<span class="badge bg-primary"><i class="bi bi-google"></i> Chrome</span>',
+            'firefox': '<span class="badge bg-warning text-dark"><i class="bi bi-browser-firefox"></i> Firefox</span>',
+            'edge': '<span class="badge bg-info"><i class="bi bi-browser-edge"></i> Edge</span>'
+        };
+        return badges[browser] || `<span class="badge bg-secondary">${browser}</span>`;
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    loadExtensionDetails();
+    loadThreatIntel();
+</script>
+{% endblock %}
