@@ -1,0 +1,70 @@
+
+agent:
+  scan_interval: 3600  # Secondes entre chaque scan
+  browsers:
+    - chrome
+    - firefox
+    - edge
+  
+backend:
+  host: "0.0.0.0"
+  port: 5000
+  database: "backend/database/extensions.db"
+
+analysis:
+  # Permissions considérées comme dangereuses
+  dangerous_permissions:
+    - "cookies"
+    - "webRequest"
+    - "webRequestBlocking"
+    - "<all_urls>"
+    - "debugger"
+    - "management"
+    - "nativeMessaging"
+    - "proxy"
+    - "tabs"
+    - "background"
+  
+  risk_weights:
+    dangerous_permission: 15
+    moderate_permission: 5
+    broad_host: 10
+    many_permissions: 2
+    unknown_source: 20
+
+threat_intel:
+  virustotal_api_key: ""  # Clé API VirusTotal (optionnel)
+  enable_vt_check: false   # Active la vérification VirusTotal
+  abuseipdb_api_key: ""    # Clé API AbuseIPDB (optionnel)
+  
+  # Cache des résultats
+  cache_enabled: true
+  cache_duration: 86400  # 24 heures en secondes
+
+# Configuration de la remediation
+remediation:
+  thresholds:
+    auto_disable_score: 90       
+    auto_quarantine_score: 85    
+    critical_findings_max: 5     
+    obfuscation_max: 80          
+    high_findings_max: 15        
+  
+  policies:
+    auto_remediation_enabled: false  
+    quarantine_on_blacklist: true
+    disable_on_critical: true
+    alert_on_high_risk: true
+  
+  # Whitelist 
+  whitelist:
+    - extension_id: "aapbdbdomjkkjkaonfhkkikfgjllcleb"
+      reason: "Google Translate - Extension officielle Google"
+    - extension_id: "nmmhkkegccagdldgiimedpiccmgmieda"
+      reason: "Google Wallet - Extension officielle Google"
+  
+  # Blacklist 
+  blacklist:
+    # Exemples -
+    # - extension_id: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    #   reason: "Adware détecté"
