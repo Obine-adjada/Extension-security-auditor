@@ -55,14 +55,14 @@ Score = (
     bonus_manifest_v2 +
     bonus_obfuscation +
     bonus_excessive_permissions
-) → cappé à 100
+)  cappé à 100
 ```
 
 **Catégorisation :**
-- 🔴 **Critique (70-100)** → Désactivation automatique recommandée
-- 🟠 **Élevé (50-69)** → Quarantaine recommandée
-- 🟡 **Moyen (30-49)** → Review manuel
-- 🟢 **Faible (0-29)** → Monitoring
+-  **Critique (70-100)** → Désactivation automatique recommandée
+-  **Élevé (50-69)** → Quarantaine recommandée
+-  **Moyen (30-49)** → Review manuel
+-  **Faible (0-29)** → Monitoring
 
 ###  Remediation 
 
@@ -154,9 +154,6 @@ python agent.py
 
 Résultat :
 ```
-============================================================
-SCAN DU CODE JAVASCRIPT
-============================================================
 
   Analyse: RiftAbyssor
     Fichiers: 6
@@ -166,9 +163,7 @@ SCAN DU CODE JAVASCRIPT
       - Code fortement obfusqué (score: 100)
       - Utilisation extensive de fonctions dangereuses
 
-============================================================
 Scan terminé: 5/5 extensions analysées
-============================================================
 ```
 
 ### 3. Dashboard - Pages Disponibles
