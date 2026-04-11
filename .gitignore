@@ -1,14 +1,23 @@
+# Python
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
 *$py.class
-*.so
-.Python
+
+# Virtual environments
 venv/
 env/
-*.db
-*.log
+
+# IDEs
 .vscode/
 .idea/
-*.swp
-*.swo
 
+# OS
+.DS_Store
+
+# Database
+*.db
+
+# Logs
+*.log
