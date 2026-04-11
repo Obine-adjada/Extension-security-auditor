@@ -5,12 +5,10 @@ __pycache__/
 *.pyo
 *$py.class
 *.json
-
-# Virtual environments
+!config/*.json
 venv/
 env/
 
-# IDEs
 .vscode/
 .idea/
 
