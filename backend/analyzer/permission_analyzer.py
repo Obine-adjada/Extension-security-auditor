@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 
 class PermissionAnalyzer:
     """
-    Analyseur avancé de permissions d'extensions navigateur
+    Analyseur avancé de permissions d'extensions navigateur.
     """
+    
     def __init__(self, config=None):
         self.config = config or {}
         
@@ -127,7 +128,7 @@ class PermissionAnalyzer:
     
     def analyze(self, extension_data):
         """
-        Analyse complète d'une extension
+        Analyse complète d'une extension.
         Args:
             extension_data: Dict avec manifest et métadonnées
         Returns:
@@ -230,7 +231,7 @@ class PermissionAnalyzer:
     
     def _check_dangerous_combinations(self, permissions):
         """
-        Vérifie les combinaisons dangereuses de permissions
+        Vérifie les combinaisons dangereuses de permissions.
         """
         additional_score = 0
         
@@ -243,7 +244,7 @@ class PermissionAnalyzer:
     
     def _check_manifest_version(self, manifest):
         """
-        Pénalité pour Manifest V2 
+        Pénalité pour Manifest V2 (moins sécurisé que V3).
         """
         version = manifest.get('manifest_version', 2)
         if version == 2:
@@ -252,7 +253,7 @@ class PermissionAnalyzer:
     
     def _check_excessive_permissions(self, permissions):
         """
-        Pénalité si trop de permissions demandées
+        Pénalité si trop de permissions demandées.
         """
         count = len(permissions)
         if count > 15:
@@ -265,7 +266,7 @@ class PermissionAnalyzer:
     
     def _check_background_scripts(self, manifest):
         """
-        Analyse des scripts en arrière-plan
+        Analyse des scripts en arrière-plan.
         """
         background = manifest.get('background', {})
         if not background:
@@ -280,7 +281,7 @@ class PermissionAnalyzer:
     
     def _check_content_scripts(self, manifest):
         """
-        Analyse des content scripts
+        Analyse des content scripts.
         """
         content_scripts = manifest.get('content_scripts', [])
         
@@ -299,7 +300,7 @@ class PermissionAnalyzer:
     
     def _generate_recommendations(self, analysis):
         """
-        Génère des recommandations basées sur l'analyse
+        Génère des recommandations basées sur l'analyse.
         """
         recommendations = []
         

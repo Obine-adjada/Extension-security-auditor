@@ -7,10 +7,11 @@ from datetime import datetime, timezone
 
 class ThreatIntelligence:
     """
-    Module d'intégration avec les services de threat intelligence
+    Module d'intégration avec les services de threat intelligence.
+    
     Services supportés:
     - VirusTotal: Analyse de fichiers et URLs
-    - AbuseIPDB: Réputation d'IPs 
+    - AbuseIPDB: Réputation d'IPs (pour update_url)
     """
     
     def __init__(self, config=None):
@@ -23,7 +24,7 @@ class ThreatIntelligence:
     
     def check_extension(self, extension_data):
         """
-        Vérifie une extension auprès des services de threat intel
+        Vérifie une extension auprès des services de threat intel.
         Args:
             extension_data: Dict avec extension_id, browser, installed_path
         Returns:
@@ -60,7 +61,7 @@ class ThreatIntelligence:
     
     def _calculate_extension_hash(self, extension_data):
         """
-        Calcule le SHA256 du dossier de l'extension
+        Calcule le SHA256 du dossier de l'extension.
         """
         try:
             manifest = extension_data.get('manifest', {})
@@ -73,7 +74,7 @@ class ThreatIntelligence:
     
     def _check_virustotal(self, file_hash):
         """
-        Vérifie un hash sur VirusTotal
+        Vérifie un hash sur VirusTotal.
         """
         if not self.vt_api_key:
             return None
@@ -147,7 +148,7 @@ class ThreatIntelligence:
     
     def check_update_url(self, update_url):
         """
-        Vérifie la réputation d'une URL de mise à jour
+        Vérifie la réputation d'une URL de mise à jour.
         """
         if not update_url or not self.vt_enabled:
             return None
@@ -192,7 +193,7 @@ class ThreatIntelligence:
     
     def get_community_reports(self, extension_id):
         """
-        Vérifie si l'extension apparaît dans des listes de malware connues
+        Vérifie si l'extension apparaît dans des listes de malware connues.
         """
         return {
             'community_reports': [],

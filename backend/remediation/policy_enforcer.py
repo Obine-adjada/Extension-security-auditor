@@ -1,13 +1,15 @@
 """
 Policy Enforcer - Applique les politiques de sécurité.
 """
+
 from datetime import datetime, timezone
 from .actions import RemediationActions
 
 class PolicyEnforcer:
     """
-    Évalue les extensions et applique les politiques de sécurité
+    Évalue les extensions et applique les politiques de sécurité.
     """
+    
     def __init__(self, config=None):
         self.config = config or {}
         self.actions_handler = RemediationActions()
@@ -109,7 +111,7 @@ class PolicyEnforcer:
     
     def apply_remediation(self, extension_data, evaluation, dry_run=True):
         """
-        Applique les actions de remediation
+        Applique les actions de remediation.
         Args:
             dry_run: Si True, simule sans exécuter
         """
@@ -157,11 +159,11 @@ class PolicyEnforcer:
         return results
     
     def _is_whitelisted(self, extension_id):
-        """Vérifie si extension est whitelistée  """
+        """Vérifie si extension est whitelistée."""
         return any(w.get('extension_id') == extension_id for w in self.whitelist)
     
     def _is_blacklisted(self, extension_id):
-        """Vérifie si extension est blacklistée """
+        """Vérifie si extension est blacklistée."""
         return any(b.get('extension_id') == extension_id for b in self.blacklist)
     
     def add_to_whitelist(self, extension_id, reason=''):
@@ -176,7 +178,7 @@ class PolicyEnforcer:
         return False
     
     def add_to_blacklist(self, extension_id, reason=''):
-        """Ajoute une extension à la blacklist """
+        """Ajoute une extension à la blacklist."""
         if not self._is_blacklisted(extension_id):
             self.blacklist.append({
                 'extension_id': extension_id,

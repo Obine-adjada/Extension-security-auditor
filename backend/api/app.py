@@ -33,7 +33,7 @@ DANGEROUS_PERMISSIONS = config['analysis']['dangerous_permissions']
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """
-    Endpoint de santé pour vérifier que l'API fonctionne
+    Endpoint de santé pour vérifier que l'API fonctionne.
     """
     return jsonify({
         'status': 'healthy',
@@ -44,7 +44,7 @@ def health_check():
 @app.route('/api/extensions', methods=['POST'])
 def receive_extensions():
     """
-    Reçoit l'inventaire d'extensions depuis un agent
+    Reçoit l'inventaire d'extensions depuis un agent.
     """
     try:
         data = request.get_json()
@@ -75,8 +75,10 @@ def receive_extensions():
                 # Prépare les données pour la base avec le risk_score
                 db_data = ext_data.copy()
                 
+                # Ajoute en base
                 extension_pk = db.add_extension(db_data)
                 
+                # Met à jour le risk_score
                 with db.get_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute("""
@@ -121,7 +123,7 @@ def receive_extensions():
 @app.route('/api/extensions', methods=['GET'])
 def get_extensions():
     """
-    Récupère toutes les extensions avec filtres optionnels
+    Récupère toutes les extensions avec filtres optionnels.
     """
     try:
         browser = request.args.get('browser')
@@ -143,7 +145,7 @@ def get_extensions():
 @app.route('/api/extensions/<int:extension_id>', methods=['GET'])
 def get_extension_details(extension_id):
     """
-    Récupère les détails d'une extension spécifique
+    Récupère les détails d'une extension spécifique.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -157,7 +159,7 @@ def get_extension_details(extension_id):
 @app.route('/api/statistics', methods=['GET'])
 def get_statistics():
     """
-    Récupère des statistiques globales
+    Récupère des statistiques globales.
     """
     try:
         stats = db.get_statistics()
@@ -168,7 +170,7 @@ def get_statistics():
 @app.route('/api/extensions/<int:extension_id>', methods=['GET'])
 def get_extension_detail(extension_id):
     """
-    Récupère les détails d'une extension spécifique
+    Récupère les détails d'une extension spécifique.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -184,7 +186,7 @@ def get_extension_detail(extension_id):
 @app.route('/api/alerts', methods=['GET'])
 def get_alerts():
     """
-    Récupère les alertes non résolues
+    Récupère les alertes non résolues.
     """
     try:
         severity = request.args.get('severity')
@@ -217,7 +219,7 @@ def get_alerts():
 @app.route('/api/extensions/<int:extension_id>/analysis', methods=['GET'])
 def get_extension_analysis(extension_id):
     """
-    Récupère l'analyse détaillée d'une extension
+    Récupère l'analyse détaillée d'une extension.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -247,7 +249,7 @@ def get_extension_analysis(extension_id):
 @app.route('/api/extensions/<int:extension_id>/threat-intel', methods=['GET'])
 def get_threat_intel(extension_id):
     """
-    Récupère les informations threat intelligence pour une extension
+    Récupère les informations threat intelligence pour une extension.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -275,7 +277,7 @@ def get_threat_intel(extension_id):
 @app.route('/api/extensions/<int:extension_id>/code-scan', methods=['GET'])
 def get_code_scan(extension_id):
     """
-    Récupère le scan de code d'une extension
+    Récupère le scan de code d'une extension.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -305,7 +307,7 @@ def get_code_scan(extension_id):
 @app.route('/api/remediation/evaluate/<int:extension_id>', methods=['GET'])
 def evaluate_for_remediation(extension_id):
     """
-    Évalue une extension et retourne les actions recommandées
+    Évalue une extension et retourne les actions recommandées.
     """
     try:
         extension = db.get_extension_by_id(extension_id)
@@ -313,6 +315,7 @@ def evaluate_for_remediation(extension_id):
         if not extension:
             return jsonify({'error': 'Extension not found'}), 404
         
+        # Reconstruit les données pour l'analyseur
         ext_data = {
             'id': extension['extension_id'],
             'manifest': {
@@ -329,7 +332,7 @@ def evaluate_for_remediation(extension_id):
         analyzer = PermissionAnalyzer()
         analysis = analyzer.analyze(ext_data)
         
-        # Scan de code 
+        # Scan de code (si disponible)
         code_scan = db.get_latest_code_scan(extension['id'])
         code_scan_results = code_scan.get('scan_results') if code_scan else None
         
@@ -348,7 +351,7 @@ def evaluate_for_remediation(extension_id):
 @app.route('/api/remediation/apply/<int:extension_id>', methods=['POST'])
 def apply_remediation(extension_id):
     """
-    Applique les actions de remediation sur une extension
+    Applique les actions de remediation sur une extension.
     
     Body JSON:
     {
@@ -365,6 +368,7 @@ def apply_remediation(extension_id):
         if not extension:
             return jsonify({'error': 'Extension not found'}), 404
         
+        # Reconstruit les données
         ext_data = {
             'id': extension['extension_id'],
             'manifest': {
@@ -400,7 +404,7 @@ def apply_remediation(extension_id):
 @app.route('/api/remediation/quarantine/list', methods=['GET'])
 def list_quarantined():
     """
-    Liste toutes les extensions en quarantaine
+    Liste toutes les extensions en quarantaine.
     """
     try:
         actions = RemediationActions()
@@ -417,7 +421,7 @@ def list_quarantined():
 @app.route('/api/remediation/quarantine/restore', methods=['POST'])
 def restore_quarantined():
     """
-    Restaure une extension depuis la quarantaine
+    Restaure une extension depuis la quarantaine.
     """
     try:
         data = request.get_json()
@@ -435,7 +439,7 @@ def restore_quarantined():
 @app.route('/api/remediation/report', methods=['GET'])
 def generate_remediation_report():
     """
-    Génère un rapport global de remediation
+    Génère un rapport global de remediation.
     """
     try:
         # Récupère toutes les extensions
@@ -448,6 +452,7 @@ def generate_remediation_report():
         enforcer = PolicyEnforcer(config.get('remediation', {}))
         
         for ext in extensions:
+            # Prépare les données correctement
             ext_data = {
                 'id': ext['extension_id'],
                 'manifest': {
@@ -469,14 +474,18 @@ def generate_remediation_report():
                         for p in ext['permissions']
                     ]
             
+            # Analyse
             analysis = analyzer.analyze(ext_data)
             
+            # Code scan si disponible
             code_scan = db.get_latest_code_scan(ext['id'])
             code_scan_results = code_scan.get('scan_results') if code_scan else None
             
+            # Évaluation
             evaluation = enforcer.evaluate_extension(ext_data, analysis, code_scan_results)
             evaluations.append(evaluation)
         
+        # Génère le rapport
         report_gen = ReportGenerator()
         report = report_gen.generate_remediation_report(evaluations, actions_results)
         
@@ -489,7 +498,7 @@ def generate_remediation_report():
         
 def mark_dangerous_permissions(extension_pk, permissions):
     """
-    Marque les permissions dangereuses dans la base
+    Marque les permissions dangereuses dans la base.
     """
     with db.get_connection() as conn:
         cursor = conn.cursor()
@@ -504,7 +513,7 @@ def mark_dangerous_permissions(extension_pk, permissions):
 
 def create_alert(extension_pk, alert_type, severity, message):
     """
-    Crée une alerte pour une extension
+    Crée une alerte pour une extension.
     """
     with db.get_connection() as conn:
         cursor = conn.cursor()

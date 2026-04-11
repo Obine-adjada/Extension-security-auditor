@@ -53,6 +53,7 @@
         if (severityFilter) {
             filtered = allAlerts.filter(a => a.severity === severityFilter);
         }
+        
         renderAlerts(filtered);
     }
     
@@ -63,6 +64,7 @@
             container.innerHTML = '<p class="text-muted text-center py-5">Aucune alerte active</p>';
             return;
         }
+        
         let html = '';
         alerts.forEach(alert => {
             const severityConfig = {

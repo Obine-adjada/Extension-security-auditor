@@ -13,6 +13,7 @@ class RemediationActions:
     Actions de remediation pour les extensions.
     """
     def __init__(self, quarantine_dir=None):
+        # Dossier de quarantaine
         if quarantine_dir:
             self.quarantine_dir = Path(quarantine_dir)
         else:
@@ -24,7 +25,7 @@ class RemediationActions:
     
     def disable_extension(self, extension_data, dry_run=False):
         """
-        Désactive une extension navigateur
+        Désactive une extension navigateur.
         Méthodes selon l'OS:
         - Windows: Renomme le dossier (.DISABLED)
         - Linux/macOS: Change les permissions (chmod 000)
@@ -88,7 +89,7 @@ class RemediationActions:
     
     def quarantine_extension(self, extension_data, reason='Policy violation', dry_run=False):
         """
-        Met une extension en quarantaine (déplace vers un dossier sécurisé)
+        Met une extension en quarantaine (déplace vers un dossier sécurisé).
         """
         ext_name = extension_data['manifest']['name']
         ext_id = extension_data.get('id')
@@ -149,7 +150,7 @@ class RemediationActions:
     
     def remove_permissions(self, extension_data, permissions_to_remove, dry_run=False):
         """
-        Retire des permissions dangereuses du manifest
+        Retire des permissions dangereuses du manifest.
         """
         ext_name = extension_data['manifest']['name']
         ext_path = Path(extension_data.get('installed_path', ''))
@@ -201,7 +202,7 @@ class RemediationActions:
     
     def restore_from_quarantine(self, quarantine_path, dry_run=False):
         """
-        Restaure une extension depuis la quarantaine
+        Restaure une extension depuis la quarantaine.
         """
         quarantine_path = Path(quarantine_path)
         
@@ -258,7 +259,7 @@ class RemediationActions:
     
     def list_quarantined(self):
         """
-        Liste toutes les extensions en quarantaine
+        Liste toutes les extensions en quarantaine.
         """
         quarantined = []
         
@@ -282,7 +283,7 @@ class RemediationActions:
     
     def _log_action(self, action_type, target, success, dry_run=False, error=None, details=None):
         """
-        Enregistre une action dans le log
+        Enregistre une action dans le log.
         """
         log_entry = {
             'timestamp': datetime.now(timezone.utc).isoformat(),
@@ -302,6 +303,6 @@ class RemediationActions:
     
     def get_action_log(self):
         """
-        Retourne le log des actions effectuées
+        Retourne le log des actions effectuées.
         """
         return self.action_log

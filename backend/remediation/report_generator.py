@@ -1,12 +1,12 @@
 """
-Générateur de rapports de remediation
+Générateur de rapports de remediation.
 """
 from datetime import datetime, timezone
 import json
 
 class ReportGenerator:
     """
-    Génère des rapports de remediation
+    Génère des rapports de remediation.
     """
     def __init__(self):
         self.reports = []
@@ -62,12 +62,15 @@ class ReportGenerator:
         Formate un rapport en texte lisible.
         """
         lines = []
+        lines.append("=" * 70)
         lines.append("RAPPORT DE REMEDIATION")
+        lines.append("=" * 70)
         lines.append(f"Généré le: {report['generated_at']}")
         lines.append("")
         
         summary = report['summary']
         lines.append("RÉSUMÉ")
+        lines.append("-" * 70)
         lines.append(f"Extensions évaluées:     {summary['total_extensions_evaluated']}")
         lines.append(f"  Critique:              {summary['critical_severity']}")
         lines.append(f"  Élevé:                 {summary['high_severity']}")
@@ -83,6 +86,7 @@ class ReportGenerator:
         critical_exts = [e for e in report['evaluations'] if e.get('severity') == 'critical']
         if critical_exts:
             lines.append("EXTENSIONS CRITIQUES")
+            lines.append("-" * 70)
             for ext in critical_exts:
                 lines.append(f"\n• {ext['extension_name']}")
                 lines.append(f"  Score de risque: {ext['risk_score']}/100")
@@ -93,11 +97,12 @@ class ReportGenerator:
                     lines.append(f"  Actions automatiques: {', '.join(ext['auto_actions'])}")
             lines.append("")
         
+        lines.append("=" * 70)
         return "\n".join(lines)
     
     def export_report_json(self, report, filepath):
         """
-        Exporte un rapport en JSON
+        Exporte un rapport en JSON.
         """
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)

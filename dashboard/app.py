@@ -14,28 +14,28 @@ db = DatabaseManager(config['backend']['database'])
 @app.route('/')
 def index():
     """
-    Page d'accueil du dashboard
+    Page d'accueil du dashboard.
     """
     return render_template('index.html')
 
 @app.route('/extensions')
 def extensions():
     """
-    Page d'inventaire des extensions
+    Page d'inventaire des extensions.
     """
     return render_template('extensions.html')
 
 @app.route('/extension/<int:ext_id>')
 def extension_detail(ext_id):
     """
-    Page de détails d'une extension
+    Page de détails d'une extension.
     """
     return render_template('extension_detail.html', ext_id=ext_id)
     
 @app.route('/api/extensions/<int:ext_id>')
 def get_extension_detail(ext_id):
     """
-    Récupère les détails d'une extension depuis l'API backend
+    Récupère les détails d'une extension depuis l'API backend.
     """
     try:
         response = requests.get(f"http://127.0.0.1:5000/api/extensions/{ext_id}")
@@ -52,26 +52,27 @@ def get_extension_detail(ext_id):
 @app.route('/alerts')
 def alerts():
     """
-    Page des alertes
+    Page des alertes.
     """
     return render_template('alerts.html')
 
 @app.route('/scans')
 def scans():
     """
-    Page d'historique des scans
+    Page d'historique des scans.
     """
     return render_template('scans.html')
 
 @app.route('/api/dashboard/stats')
 def dashboard_stats():
     """
-    API pour les statistiques du dashboard
+    API pour les statistiques du dashboard.
     """
     stats = db.get_statistics()
     with db.get_connection() as conn:
         cursor = conn.cursor()
         
+        # Distribution des risk scores
         cursor.execute("""
             SELECT 
                 CASE 
@@ -87,7 +88,7 @@ def dashboard_stats():
         """)
         stats['risk_distribution'] = {row[0]: row[1] for row in cursor.fetchall()}
         
-        # Les permissions les plus utilisées
+        # Top 5 permissions les plus utilisées
         cursor.execute("""
             SELECT p.permission, COUNT(*) as count
             FROM permissions p
@@ -107,7 +108,7 @@ def dashboard_stats():
 @app.route('/api/dashboard/extensions')
 def dashboard_extensions():
     """
-    API pour la liste des extensions avec filtres
+    API pour la liste des extensions avec filtres.
     """
     extensions = db.get_all_extensions(active_only=True)
     return jsonify(extensions)
@@ -115,7 +116,7 @@ def dashboard_extensions():
 @app.route('/api/dashboard/alerts')
 def dashboard_alerts():
     """
-    API pour les alertes actives
+    API pour les alertes actives.
     """
     with db.get_connection() as conn:
         cursor = conn.cursor()
@@ -153,7 +154,7 @@ def dashboard_alerts():
 @app.route('/api/dashboard/scans')
 def dashboard_scans():
     """
-    API pour l'historique des scans
+    API pour l'historique des scans.
     """
     with db.get_connection() as conn:
         cursor = conn.cursor()
@@ -182,7 +183,7 @@ def dashboard_scans():
 @app.route('/api/dashboard/threat-intel/<int:ext_id>')
 def dashboard_threat_intel(ext_id):
     """
-    API pour les informations threat intelligence
+    API pour les informations threat intelligence.
     """
     try:
         response = requests.get(f"http://127.0.0.1:5000/api/extensions/{ext_id}/threat-intel")
@@ -196,7 +197,7 @@ def dashboard_threat_intel(ext_id):
 @app.route('/api/dashboard/code-scan/<int:ext_id>')
 def dashboard_code_scan(ext_id):
     """
-    API pour le scan de code
+    API pour le scan de code.
     """
     try:
         response = requests.get(f"http://127.0.0.1:5000/api/extensions/{ext_id}/code-scan")
@@ -210,14 +211,14 @@ def dashboard_code_scan(ext_id):
 @app.route('/remediation')
 def remediation():
     """
-    Page de remediation
+    Page de remediation.
     """
     return render_template('remediation.html')
 
 @app.route('/api/dashboard/remediation/report')
 def dashboard_remediation_report():
     """
-    Proxy pour le rapport de remediation
+    Proxy pour le rapport de remediation.
     """
     try:
         response = requests.get('http://127.0.0.1:5000/api/remediation/report')
@@ -228,7 +229,7 @@ def dashboard_remediation_report():
 @app.route('/api/dashboard/remediation/apply/<int:ext_id>', methods=['POST'])
 def dashboard_remediation_apply(ext_id):
     """
-    Proxy pour appliquer la remediation
+    Proxy pour appliquer la remediation.
     """
     try:
         data = request.get_json()
@@ -243,7 +244,7 @@ def dashboard_remediation_apply(ext_id):
 @app.route('/api/dashboard/remediation/quarantine/list')
 def dashboard_remediation_quarantine_list():
     """
-    Proxy pour lister les extensions en quarantaine
+    Proxy pour lister les extensions en quarantaine.
     """
     try:
         response = requests.get('http://127.0.0.1:5000/api/remediation/quarantine/list')

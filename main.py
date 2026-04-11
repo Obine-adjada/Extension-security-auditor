@@ -7,7 +7,7 @@ Usage:
     python main.py              # Lance backend + dashboard
     python main.py --api-only   # Lance seulement l'API
     python main.py --dash-only  # Lance seulement le dashboard
-    python main.py --agent      # Lance l'agent de collecte 
+    python main.py --agent      # Lance l'agent de collecte (Windows)
 """
 
 import sys
@@ -23,9 +23,24 @@ def clear_screen():
     """Nettoie l'écran."""
     os.system('clear' if os.name != 'nt' else 'cls')
 
+def print_banner():
+    """Affiche la bannière du projet."""
+    banner = """
+    ╔════════════════════════════════════════════════════════════════╗
+    ║                                                                ║
+    ║        BROWSER EXTENSION SECURITY AUDITOR                      ║
+    ║        Système de Détection de Menaces                         ║
+    ║                                                                ║
+    ║                                                                ║
+    ║                                                                ║
+    ║                                                                ║
+    ╚════════════════════════════════════════════════════════════════╝
+    """
+    print(banner)
+
 def run_api_backend():
     """Lance le serveur API Backend."""
-    print("\n[API] Démarrage du serveur API Backend.")
+    print("\n[API] Démarrage du serveur API Backend...")
     
     try:
         from backend.api.app import app, config
@@ -50,8 +65,8 @@ def run_api_backend():
         traceback.print_exc()
 
 def run_dashboard():
-    """Lance le Dashboard Web"""
-    print("\n[DASHBOARD] Démarrage du Dashboard Web")
+    """Lance le Dashboard Web."""
+    print("\n[DASHBOARD] Démarrage du Dashboard Web...")
     
     try:
         from dashboard.app import app
@@ -75,8 +90,8 @@ def run_dashboard():
         traceback.print_exc()
 
 def run_agent():
-    """Lance l'agent de collecte """
-    print("\n[AGENT] Démarrage de l'agent de collecte    ")
+    """Lance l'agent de collecte (Windows)."""
+    print("\n[AGENT] Démarrage de l'agent de collecte...")
     
     try:
         from agent.agent import main as agent_main
@@ -88,7 +103,7 @@ def run_agent():
         traceback.print_exc()
 
 def run_all():
-    """Lance API + Dashboard en parallèle"""
+    """Lance API + Dashboard en parallèle."""
     clear_screen()
     print_banner()
     
@@ -110,12 +125,12 @@ def run_all():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\n\n[MAIN] Arrêt des services   ")
+        print("\n\n[MAIN] Arrêt des services...")
         print("[MAIN] Au revoir !")
         sys.exit(0)
 
 def main():
-    """Point d'entrée principal"""
+    """Point d'entrée principal."""
     parser = argparse.ArgumentParser(
         description='Browser Extension Security Auditor',
         formatter_class=argparse.RawDescriptionHelpFormatter
@@ -136,18 +151,21 @@ def main():
     parser.add_argument(
         '--agent',
         action='store_true',
-        help='Lance l\'agent de collecte '
+        help='Lance l\'agent de collecte (Windows)'
     )
     
     args = parser.parse_args()
     if args.agent:
         clear_screen()
+        print_banner()
         run_agent()
     elif args.api_only:
         clear_screen()
+        print_banner()
         run_api_backend()
     elif args.dash_only:
         clear_screen()
+        print_banner()
         run_dashboard()
     else:
         run_all()

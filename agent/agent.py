@@ -8,7 +8,7 @@ try:
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
-    print("Module 'requests' non disponible Mode local uniquement")
+    print("Module 'requests' non disponibleMode local uniquement")
 sys.path.insert(0, str(Path(__file__).parent / 'collectors'))
 from chrome_collector import ChromeCollector
 from firefox_collector import FirefoxCollector
@@ -20,7 +20,7 @@ try:
     CODE_SCANNER_AVAILABLE = True
 except ImportError:
     CODE_SCANNER_AVAILABLE = False
-    print("Avertissement Code scanner non disponible")
+    print("Avertissement: Code scanner non disponible")
 
 class ExtensionAgent:
     """
@@ -41,14 +41,14 @@ class ExtensionAgent:
     
     def load_config(self, config_path):
         """
-        Charge la configuration depuis le fichier JSON.
+        Charge la configuration depuis le fichier JSON
         """
         try:
             with open(config_path, 'r') as f:
                 return json.load(f)
         except FileNotFoundError:
             print(f"Attention: Fichier de config non trouvé: {config_path}")
-            print("Utilisation de la configuration par défaut (mode local)")
+            print("Utilisation de la configuration par défaut (mode local uniquement)")
             return {
                 "api": {"enabled": False},
                 "scan": {
@@ -72,7 +72,7 @@ class ExtensionAgent:
         browsers = self.config.get('scan', {}).get('browsers', ['chrome', 'firefox', 'edge'])
         
         if 'chrome' in browsers:
-            print("[1/3] Scan Chrome ")
+            print("[1/3] Scan Chrome")
             chrome_collector = ChromeCollector()
             chrome_exts = chrome_collector.collect_extensions()
             self.all_extensions.extend(chrome_exts)
@@ -80,7 +80,7 @@ class ExtensionAgent:
             print(f"Chrome: {len(chrome_exts)} extension(s)\n")
         
         if 'firefox' in browsers:
-            print("[2/3] Scan Firefox ")
+            print("[2/3] Scan Firefox")
             firefox_collector = FirefoxCollector()
             firefox_exts = firefox_collector.collect_extensions()
             self.all_extensions.extend(firefox_exts)
@@ -88,7 +88,7 @@ class ExtensionAgent:
             print(f"Firefox: {len(firefox_exts)} extension(s)\n")
         
         if 'edge' in browsers:
-            print("[3/3] Scan Edge ")
+            print("[3/3] Scan Edge")
             edge_collector = EdgeCollector()
             edge_exts = edge_collector.collect_extensions()
             self.all_extensions.extend(edge_exts)
@@ -125,8 +125,7 @@ class ExtensionAgent:
         Scan le code JavaScript de chaque extension collectée
         """
         if not CODE_SCANNER_AVAILABLE:
-            print("\nCode scanner non disponible - installation requise:")
-            print("  pip install esprima jsbeautifier")
+            print("\nCode scanner non disponible installation requise  ")
             return
         print("SCAN DU CODE JAVASCRIPT")
         scanner = CodeScanner()
@@ -156,7 +155,7 @@ class ExtensionAgent:
                 
                 print(f" Fichiers: {scan_results['files_scanned']}")
                 print(f"Findings: {findings} (Critique: {critical}, Élevé: {high})")
-                print(f" Obfuscation: {obfusc}/100")
+                print(f"Obfuscation: {obfusc}/100")
                 
                 if scan_results['risk_indicators']:
                     print(f"    Risques:")
@@ -164,7 +163,6 @@ class ExtensionAgent:
                         print(f"      - {indicator}")
                 
                 scanned_count += 1
-                
             except Exception as e:
                 print(f"  [ERREUR] {ext['manifest']['name']}: {e}")
                 ext['code_scan'] = None
@@ -184,7 +182,7 @@ class ExtensionAgent:
         dangerous = self.analyze_permissions()
         
         if dangerous:
-            print(f"\nExtensions avec permissions sensibles: {len(dangerous)}")
+            print(f"\nExtensions avec permissions sensibles {len(dangerous)}")
             for ext in dangerous:
                 print(f"\n  {ext['name']} ({ext['browser']})")
                 print(f"    Permissions: {', '.join(ext['dangerous_permissions'])}")

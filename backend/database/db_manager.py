@@ -6,8 +6,9 @@ import json
 
 class DatabaseManager:
     """
-    Gestionnaire de la base de données SQLite
+    Gestionnaire de la base de données SQLite.
     """
+    
     def __init__(self, db_path="backend/database/extensions.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -16,8 +17,8 @@ class DatabaseManager:
     @contextmanager
     def get_connection(self):
         """
-        Context manager pour les connexions SQLite
-        Assure la fermeture automatique de la connexion
+        Context manager pour les connexions SQLite.
+        Assure la fermeture automatique de la connexion.
         """
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
@@ -32,7 +33,7 @@ class DatabaseManager:
     
     def init_database(self):
         """
-        Initialise la base de données avec le schéma
+        Initialise la base de données avec le schéma.
         """
         schema_path = Path(__file__).parent / "schema.sql"
         
@@ -45,7 +46,7 @@ class DatabaseManager:
     
     def add_extension(self, extension_data):
         """
-        Ajoute ou met à jour une extension dans la base
+        Ajoute ou met à jour une extension dans la base.
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -105,7 +106,7 @@ class DatabaseManager:
             
     def record_scan(self, scan_stats, hostname="unknown"):
         """
-        Enregistre les statistiques d'un scan
+        Enregistre les statistiques d'un scan.
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -126,7 +127,7 @@ class DatabaseManager:
     
     def get_all_extensions(self, active_only=True):
         """
-        Récupère toutes les extensions de la base
+        Récupère toutes les extensions de la base.
         Args:
             active_only: Si True, ne retourne que les extensions actives
         Returns:
@@ -154,7 +155,7 @@ class DatabaseManager:
     
     def get_extension_by_id(self, extension_pk):
         """
-        Récupère une extension spécifique avec ses permissions
+        Récupère une extension spécifique avec ses permissions.
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -177,7 +178,7 @@ class DatabaseManager:
     
     def get_statistics(self):
         """
-        Retourne des statistiques globales
+        Retourne des statistiques globales.
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -198,6 +199,7 @@ class DatabaseManager:
                 WHERE is_active = 1 AND risk_score > 50
             """)
             stats['high_risk_count'] = cursor.fetchone()[0]
+            # Dernier scan
             cursor.execute("""
                 SELECT scan_time, total_extensions 
                 FROM scans 
@@ -214,7 +216,8 @@ class DatabaseManager:
     
     def save_code_scan(self, extension_pk, scan_results):
         """
-        Sauvegarde les résultats d'un scan de code
+        Sauvegarde les résultats d'un scan de code.
+        
         Args:
             extension_pk: ID de l'extension
             scan_results: Dict avec les résultats du scan
@@ -244,7 +247,7 @@ class DatabaseManager:
     
     def get_latest_code_scan(self, extension_pk):
         """
-        Récupère le dernier scan de code pour une extension
+        Récupère le dernier scan de code pour une extension.
         """
         with self.get_connection() as conn:
             cursor = conn.cursor()

@@ -7,7 +7,7 @@ import json
 
 class CodeScanner:
     """
-    Scanner de code JavaScript pour détecter les patterns malveillants
+    Scanner de code JavaScript pour détecter les patterns malveillants.
     Analyse :
     - Code obfusqué
     - Fonctions dangereuses (eval, Function, etc.)
@@ -180,7 +180,7 @@ class CodeScanner:
     
     def scan_extension(self, extension_path):
         """
-        Scan complet d'une extension
+        Scan complet d'une extension.
         Args:
             extension_path: Chemin vers le dossier de l'extension
         Returns:
@@ -224,7 +224,7 @@ class CodeScanner:
     
     def _find_js_files(self, base_path):
         """
-        Trouve tous les fichiers JavaScript dans l'extension
+        Trouve tous les fichiers JavaScript dans l'extension.
         """
         js_files = []
         base_path = Path(base_path)
@@ -241,7 +241,7 @@ class CodeScanner:
     
     def _scan_file(self, file_path):
         """
-        Scan un fichier JavaScript individuel
+        Scan un fichier JavaScript individuel.
         """
         try:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
@@ -269,7 +269,7 @@ class CodeScanner:
     
     def _scan_dangerous_functions(self, content, file_path):
         """
-        Détecte l'utilisation de fonctions dangereuses
+        Détecte l'utilisation de fonctions dangereuses.
         """
         findings = []
         
@@ -293,7 +293,7 @@ class CodeScanner:
     
     def _scan_obfuscation(self, content, file_path):
         """
-        Détecte les techniques d'obfuscation
+        Détecte les techniques d'obfuscation.
         """
         findings = []
         
@@ -317,7 +317,7 @@ class CodeScanner:
     
     def _scan_exfiltration(self, content, file_path):
         """
-        Détecte les patterns d'exfiltration de données
+        Détecte les patterns d'exfiltration de données.
         """
         findings = []
         
@@ -341,7 +341,7 @@ class CodeScanner:
     
     def _scan_network(self, content, file_path):
         """
-        Détecte les communications réseau
+        Détecte les communications réseau.
         """
         findings = []
         
@@ -364,7 +364,7 @@ class CodeScanner:
     
     def _scan_dom_manipulation(self, content, file_path):
         """
-        Détecte les manipulations du DOM suspectes
+        Détecte les manipulations du DOM suspectes.
         """
         findings = []
         
@@ -387,7 +387,7 @@ class CodeScanner:
     
     def _analyze_ast(self, content, file_path):
         """
-        Analyse syntaxique avec esprima pour détections avancées
+        Analyse syntaxique avec esprima pour détections avancées.
         """
         try:
             ast = esprima.parseScript(content, {'loc': True, 'range': True})
@@ -411,7 +411,7 @@ class CodeScanner:
     
     def _walk_ast(self, node, findings, file_path, content):
         """
-        Parcours récursif de l'AST
+        Parcours récursif de l'AST.
         """
         if isinstance(node, dict):
             node_type = node.get('type')
@@ -436,7 +436,7 @@ class CodeScanner:
     
     def _get_context(self, content, position, context_length=80):
         """
-        Extrait le contexte autour d'une position dans le code
+        Extrait le contexte autour d'une position dans le code.
         """
         start = max(0, position - context_length // 2)
         end = min(len(content), position + context_length // 2)
@@ -448,7 +448,7 @@ class CodeScanner:
     
     def _calculate_obfuscation_score(self, findings):
         """
-        Calcule un score d'obfuscation (0-100)
+        Calcule un score d'obfuscation (0-100).
         """
         obfuscation_findings = [f for f in findings if f['type'] == 'obfuscation']
         
@@ -461,7 +461,7 @@ class CodeScanner:
     
     def _generate_risk_indicators(self, results):
         """
-        Génère une liste d'indicateurs de risque basée sur les findings
+        Génère une liste d'indicateurs de risque basée sur les findings.
         """
         indicators = []
         
