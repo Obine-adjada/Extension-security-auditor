@@ -329,6 +329,7 @@ threat_intel:
 
 ### Analyse de Code JavaScript
 ![Code Analysis](images/Analyse.png)
+
 *Détails des findings : eval(), document.cookie, fetch() vers domaines externes*
 
 ### Interface de Remediation
