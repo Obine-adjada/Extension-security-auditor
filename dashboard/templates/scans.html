@@ -62,12 +62,21 @@
         
         let html = '';
         scans.forEach(scan => {
-            const scanDate = new Date(scan.scan_time);
+            // Parse UTC et convertit en heure locale
+            const scanDate = new Date(scan.scan_time + 'Z'); // Force UTC avec 'Z'
+            const localTime = scanDate.toLocaleString('fr-FR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Europe/Paris'
+            });
             
             html += `
                 <tr>
                     <td><strong>#${scan.id}</strong></td>
-                    <td>${scanDate.toLocaleString('fr-FR')}</td>
+                    <td>${localTime}</td>
                     <td><code>${escapeHtml(scan.hostname)}</code></td>
                     <td><span class="badge bg-primary">${scan.chrome}</span></td>
                     <td><span class="badge bg-warning">${scan.firefox}</span></td>

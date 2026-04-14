@@ -11,6 +11,22 @@ with open(config_path, 'r') as f:
     config = yaml.safe_load(f)
 db = DatabaseManager(config['backend']['database'])
 
+
+@app.template_filter('format_datetime')
+def format_datetime(dt_str):
+    """Convertit UTC vers heure locale française."""
+    if not dt_str:
+        return 'N/A'
+    
+    # Parse la date UTC
+    dt_utc = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+
+    paris_tz = pytz.timezone('Europe/Paris')
+    dt_local = dt_utc.astimezone(paris_tz)
+    
+    return dt_local.strftime('%Y-%m-%d %H:%M')
+
+
 @app.route('/')
 def index():
     """

@@ -223,22 +223,40 @@ class CodeScanner:
         return results
     
     def _find_js_files(self, base_path):
-        """
-        Trouve tous les fichiers JavaScript dans l'extension.
-        """
+        """Trouve tous les fichiers JavaScript."""
         js_files = []
         base_path = Path(base_path)
         
         if not base_path.exists():
             return js_files
         
+        # Si c'est un fichier .xpi (Firefox), extraire d'abord
+        if base_path.suffix == '.xpi':
+            import zipfile
+            import tempfile
+            
+            try:
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    with zipfile.ZipFile(base_path, 'r') as zip_ref:
+                        zip_ref.extractall(temp_dir)
+                    
+                    # Cherche les .js dans le dossier extrait
+                    for root, dirs, files in os.walk(temp_dir):
+                        for file in files:
+                            if file.endswith('.js'):
+                                js_files.append(Path(root) / file)
+            except Exception as e:
+                print(f"Erreur extraction .xpi: {e}")
+            
+            return js_files
+        
+        # Pour Chrome/Edge (dossier classique)
         for root, dirs, files in os.walk(base_path):
             for file in files:
                 if file.endswith('.js'):
                     js_files.append(Path(root) / file)
         
         return js_files
-    
     def _scan_file(self, file_path):
         """
         Scan un fichier JavaScript individuel.

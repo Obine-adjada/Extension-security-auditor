@@ -315,6 +315,25 @@ threat_intel:
   virustotal_api_key: "CLE_ICI"
   enable_vt_check: true
 ```
+---
+
+## Screenshots
+
+### Dashboard Principal
+![Dashboard](images/Dashboard.png)
+*Vue d'ensemble avec statistiques et graphiques de distribution des risques*
+
+### Détection de Malware
+![Malware Detection](images/Inventaire.png)
+*Extension malveillante détectée : 200 patterns suspects, code 100% obfusqué*
+
+### Analyse de Code JavaScript
+![Code Analysis](images/Analyse.png)
+*Détails des findings : eval(), document.cookie, fetch() vers domaines externes*
+
+### Interface de Remediation
+![Remediation](images/Remédier.png)
+*Gestion des actions de mitigation avec policy enforcement*
 
 ---
 

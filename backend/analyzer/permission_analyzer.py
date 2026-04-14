@@ -90,14 +90,14 @@ class PermissionAnalyzer:
                 'reason': 'Filtrage réseau déclaratif'
             }
         }
-        # Patterns d'URLs à risque
+        
         self.url_patterns = {
             'all_sites': ['<all_urls>', 'http://*/*', 'https://*/*'],
             'financial': ['*://*/checkout/*', '*://*/payment/*', '*://*/billing/*'],
             'admin': ['*://*/admin/*', '*://*/wp-admin/*'],
             'api': ['*://*/api/*']
         }
-        # Combinaisons dangereuses
+        
         self.dangerous_combinations = [
             {
                 'permissions': ['cookies', 'webRequest'],
@@ -126,13 +126,9 @@ class PermissionAnalyzer:
             }
         ]
     
-    def analyze(self, extension_data):
+    def analyze(self, extension_data, code_scan_results=None):
         """
-        Analyse complète d'une extension.
-        Args:
-            extension_data: Dict avec manifest et métadonnées
-        Returns:
-            dict: Résultat de l'analyse avec score et détails
+        Analyse complète d'une extension avec code scan.
         """
         manifest = extension_data.get('manifest', {})
         permissions = manifest.get('permissions', [])
@@ -148,6 +144,7 @@ class PermissionAnalyzer:
             'dangerous_combinations': [],
             'recommendations': []
         }
+        
         for perm in permissions:
             perm_analysis = self._analyze_permission(perm)
             analysis['risk_score'] += perm_analysis['weight']
@@ -161,6 +158,12 @@ class PermissionAnalyzer:
         analysis['risk_score'] += self._check_excessive_permissions(permissions)
         analysis['risk_score'] += self._check_background_scripts(manifest)
         analysis['risk_score'] += self._check_content_scripts(manifest)
+        
+        # NOUVEAU : Score code scan
+        if code_scan_results:
+            code_score = self._calculate_code_scan_score(code_scan_results)
+            analysis['risk_score'] += code_score
+        
         analysis['risk_score'] = min(analysis['risk_score'], 100)
         
         if analysis['risk_score'] >= 70:
@@ -177,10 +180,7 @@ class PermissionAnalyzer:
         return analysis
     
     def _analyze_permission(self, permission):
-        """
-        Analyse une permission individuelle.
-        """
-        perm_lower = permission.lower()
+        """Analyse une permission individuelle."""
         if permission in self.critical_permissions:
             info = self.critical_permissions[permission]
             return {
@@ -207,6 +207,7 @@ class PermissionAnalyzer:
                 'weight': info['weight'],
                 'reason': info['reason']
             }
+        
         if any(pattern in permission for pattern in self.url_patterns['all_sites']):
             return {
                 'permission': permission,
@@ -222,6 +223,7 @@ class PermissionAnalyzer:
                 'weight': 8,
                 'reason': 'Accès à des domaines spécifiques'
             }
+        
         return {
             'permission': permission,
             'category': 'low',
@@ -230,9 +232,7 @@ class PermissionAnalyzer:
         }
     
     def _check_dangerous_combinations(self, permissions):
-        """
-        Vérifie les combinaisons dangereuses de permissions.
-        """
+        """Vérifie les combinaisons dangereuses."""
         additional_score = 0
         
         for combo in self.dangerous_combinations:
@@ -243,18 +243,14 @@ class PermissionAnalyzer:
         return additional_score
     
     def _check_manifest_version(self, manifest):
-        """
-        Pénalité pour Manifest V2 (moins sécurisé que V3).
-        """
+        """Pénalité Manifest V2."""
         version = manifest.get('manifest_version', 2)
         if version == 2:
             return 5
         return 0
     
     def _check_excessive_permissions(self, permissions):
-        """
-        Pénalité si trop de permissions demandées.
-        """
+        """Pénalité trop de permissions."""
         count = len(permissions)
         if count > 15:
             return 15
@@ -265,31 +261,25 @@ class PermissionAnalyzer:
         return 0
     
     def _check_background_scripts(self, manifest):
-        """
-        Analyse des scripts en arrière-plan.
-        """
+        """Analyse background scripts."""
         background = manifest.get('background', {})
         if not background:
             return 0
         if background.get('persistent', False):
             return 8
-        
         if background.get('service_worker') or background.get('scripts'):
             return 5
-        
         return 0
     
     def _check_content_scripts(self, manifest):
-        """
-        Analyse des content scripts.
-        """
+        """Analyse content scripts."""
         content_scripts = manifest.get('content_scripts', [])
-        
         if not content_scripts:
             return 0
         
         score = 0
         score += min(len(content_scripts) * 2, 10)
+        
         for script in content_scripts:
             matches = script.get('matches', [])
             if '<all_urls>' in matches or 'http://*/*' in matches or 'https://*/*' in matches:
@@ -298,10 +288,28 @@ class PermissionAnalyzer:
         
         return score
     
+    def _calculate_code_scan_score(self, code_scan_results):
+        """
+        Score basé sur le scan de code.
+        """
+        score = 0
+        
+        critical = code_scan_results['severity_counts']['critical']
+        score += critical * 20
+        
+        high = code_scan_results['severity_counts']['high']
+        score += high * 10
+        
+        medium = code_scan_results['severity_counts']['medium']
+        score += medium * 3
+        
+        obfusc = code_scan_results['obfuscation_score']
+        score += obfusc * 0.3
+        
+        return min(score, 70)
+    
     def _generate_recommendations(self, analysis):
-        """
-        Génère des recommandations basées sur l'analyse.
-        """
+        """Recommandations."""
         recommendations = []
         
         if analysis['risk_score'] >= 70:
@@ -315,6 +323,7 @@ class PermissionAnalyzer:
                 'severity': 'high',
                 'message': 'Audit manuel requis avant autorisation'
             })
+        
         critical_perms = [p for p in analysis['permission_details'] if p['category'] == 'critical']
         if critical_perms:
             recommendations.append({

@@ -67,7 +67,11 @@ def receive_extensions():
                 
                 # Analyse avancée de l'extension
                 analyzer = PermissionAnalyzer()
-                analysis = analyzer.analyze(ext_data)
+                # Récupère le code scan
+                code_scan_data = ext_data.get('code_scan')
+
+                # Analyse AVEC le code scan
+                analysis = analyzer.analyze(ext_data, code_scan_results=code_scan_data)
                 
                 # Utilise le score de l'analyseur
                 risk_score = analysis['risk_score']
